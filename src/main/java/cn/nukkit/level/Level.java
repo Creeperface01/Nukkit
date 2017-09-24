@@ -501,8 +501,8 @@ public class Level implements ChunkManager, Metadatable {
         pk.x = (float) pos.x;
         pk.y = (float) pos.y;
         pk.z = (float) pos.z;
-        pk.unknownBool = unknown;
-        pk.disableRelativeVolume = disableRelativeVolume;
+        pk.isBabyMob = unknown;
+        pk.isGlobal = disableRelativeVolume;
 
         if (players == null) {
             this.addChunkPacket(pos.getFloorX(), pos.getFloorZ(), pk);
@@ -676,30 +676,21 @@ public class Level implements ChunkManager, Metadatable {
         }
     }
 
-    public void sendTime(Player player) {
-        if (this.stopTime) {
+    public void sendTime(Player... players) {
+        /*if (this.stopTime) { //TODO
             SetTimePacket pk0 = new SetTimePacket();
             pk0.time = (int) this.time;
             player.dataPacket(pk0);
-        }
+        }*/
 
         SetTimePacket pk = new SetTimePacket();
         pk.time = (int) this.time;
 
-        player.dataPacket(pk);
+        Server.broadcastPacket(players, pk);
     }
 
     public void sendTime() {
-        if (this.stopTime) {
-            SetTimePacket pk0 = new SetTimePacket();
-            pk0.time = (int) this.time;
-            Server.broadcastPacket(this.players.values().stream().toArray(Player[]::new), pk0);
-        }
-
-        SetTimePacket pk = new SetTimePacket();
-        pk.time = (int) this.time;
-
-        Server.broadcastPacket(this.players.values().stream().toArray(Player[]::new), pk);
+        sendTime(this.players.values().stream().toArray(Player[]::new));
     }
 
     public GameRules getGameRules() {
@@ -1755,7 +1746,6 @@ public class Level implements ChunkManager, Metadatable {
 
                             .putShort("Health", 5).putCompound("Item", itemTag).putShort("PickupDelay", delay));
 
-            itemEntity.setPickupDelay(delay); //TODO: fix this
             itemEntity.spawnToAll();
         }
     }
@@ -1806,11 +1796,11 @@ public class Level implements ChunkManager, Metadatable {
                 breakTime *= 1 - (0.3 * eff.getLevel());
             }
 
-            //breakTime -= 0.1;
-            //TODO: Check if it's necessary to minus breakTime with 0.1.
+            breakTime -= 0.15;
 
             BlockBreakEvent ev = new BlockBreakEvent(player, target, item, player.isCreative(),
                     (player.lastBreak + breakTime * 1000) > System.currentTimeMillis());
+
             double distance;
             if (player.isSurvival() && !target.isBreakable(item)) {
                 ev.setCancelled();
@@ -1957,6 +1947,7 @@ public class Level implements ChunkManager, Metadatable {
         return this.useItemOn(vector, item, face, fx, fy, fz, player, false);
     }
 
+
     public Item useItemOn(Vector3 vector, Item item, BlockFace face, float fx, float fy, float fz, Player player, boolean playSound) {
         Block target = this.getBlock(vector);
         Block block = target.getSide(face);
@@ -2003,6 +1994,7 @@ public class Level implements ChunkManager, Metadatable {
             } else {
                 return null;
             }
+
         } else if (target.canBeActivated() && target.onActivate(item, null)) {
             return item;
         }
@@ -2369,14 +2361,18 @@ public class Level implements ChunkManager, Metadatable {
 
             for (Entity entity : oldEntities.values()) {
                 chunk.addEntity(entity);
-                oldChunk.removeEntity(entity);
-                entity.chunk = chunk;
+                if (oldChunk != null) {
+                    oldChunk.removeEntity(entity);
+                    entity.chunk = chunk;
+                }
             }
 
             for (BlockEntity blockEntity : oldBlockEntities.values()) {
                 chunk.addBlockEntity(blockEntity);
-                oldChunk.removeBlockEntity(blockEntity);
-                blockEntity.chunk = chunk;
+                if (oldChunk != null) {
+                    oldChunk.removeBlockEntity(blockEntity);
+                    blockEntity.chunk = chunk;
+                }
             }
 
             this.provider.setChunk(chunkX, chunkZ, chunk);
