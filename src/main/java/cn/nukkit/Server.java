@@ -816,7 +816,6 @@ public class Server {
 
     public void onPlayerCompleteLoginSequence(Player player) {
         this.sendFullPlayerListData(player);
-        this.sendRecipeList(player);
     }
 
     public void onPlayerLogin(Player player) {
