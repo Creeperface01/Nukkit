@@ -3635,6 +3635,22 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         pk.type = SetTitlePacket.TYPE_RESET;
         this.dataPacket(pk);
     }
+    
+    public void setSubtitle(String subtitle){
+         SetTitlePacket pk = new SetTitlePacket();
+         pk.type = SetTitlePacket.TYPE_SUBTITLE;
+         pk.text = subtitle;
+         this.dataPacket(pk);
+    }
+    
+    public void setTitleAnimationTimes(int fadein, int duration, int fadeout){
+        SetTitlePacket pk = new SetTitlePacket();
+        pk.type = SetTitlePacket.TYPE_ANIMATION_TIMES;
+        pk.fadeInTime = fadein;
+        pk.stayTime = duration;
+        pk.fadeOutTime = fadeout;
+        this.dataPacket(pk);
+    }
 
     public void sendTitle(String title) {
         this.sendTitle(title, "", 20, 20, 5);
@@ -4484,7 +4500,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
      * @return bossBarId  The BossBar ID, you should store it if you want to remove or update the BossBar later
      */
 
-    /*public long createBossBar(String text, int length) {
+    public long createBossBar(String text, int length) {
         // First we spawn a entity
         long bossBarId = 1095216660480L + ThreadLocalRandom.current().nextLong(0, 0x7fffffffL);
         AddEntityPacket pkAdd = new AddEntityPacket();
@@ -4521,11 +4537,11 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
         // And now we send the bossbar packet
         BossEventPacket pkBoss = new BossEventPacket();
-        pkBoss.eid = bossBarId;
-        pkBoss.type = BossEventPacket.ADD;
+        pkBoss.bossEid = bossBarId;
+        pkBoss.type = BossEventPacket.TYPE_SHOW;
         this.dataPacket(pkBoss);
         return bossBarId;
-    }*/
+    }
 
     /**
      * Updates a BossBar
@@ -4534,7 +4550,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
      * @param length    The new BossBar length
      * @param bossBarId The BossBar ID
      */
-    /*public void updateBossBar(String text, int length, long bossBarId) {
+    public void updateBossBar(String text, int length, long bossBarId) {
         // First we update the boss bar length
         UpdateAttributesPacket pkAttributes = new UpdateAttributesPacket();
         pkAttributes.entityId = bossBarId;
@@ -4559,11 +4575,11 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
         // And now we send the bossbar packet
         BossEventPacket pkBoss = new BossEventPacket();
-        pkBoss.eid = bossBarId;
-        pkBoss.type = BossEventPacket.UPDATE;
+        pkBoss.bossEid = bossBarId;
+        pkBoss.type = BossEventPacket.TYPE_REGISTER_PLAYER;
         this.dataPacket(pkBoss);
         return;
-    }*/
+    }
 
     /**
      * Removes a BossBar
