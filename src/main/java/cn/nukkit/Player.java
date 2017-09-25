@@ -4578,7 +4578,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         // And now we send the bossbar packet
         BossEventPacket pkBoss = new BossEventPacket();
         pkBoss.bossEid = bossBarId;
-        pkBoss.type = BossEventPacket.TYPE_REGISTER_PLAYER;
+        pkBoss.type = BossEventPacket.TYPE_UPDATE;
         this.dataPacket(pkBoss);
         return;
     }
