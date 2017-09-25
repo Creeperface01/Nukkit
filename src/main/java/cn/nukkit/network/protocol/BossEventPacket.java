@@ -13,8 +13,6 @@ public class BossEventPacket extends DataPacket {
 
     public long bossEid;
     public int type;
-    public float healthPercent;
-    public String title;
     
     @Override
     public byte pid() {
@@ -30,11 +28,5 @@ public class BossEventPacket extends DataPacket {
         this.reset();
         this.putEntityUniqueId(this.bossEid);
         this.putUnsignedVarInt(this.type);
-        switch (this.type) {
-            case TYPE_SHOW:
-            case TYPE_UPDATE:    
-                this.putString(this.title);
-                this.putLFloat(this.healthPercent);
-        }
     }
 }
