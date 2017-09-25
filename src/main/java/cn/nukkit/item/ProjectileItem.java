@@ -38,25 +38,33 @@ public abstract class ProjectileItem extends Item {
                         .add(new FloatTag("", (float) player.yaw))
                         .add(new FloatTag("", (float) player.pitch)));
 
-        Entity snowball = Entity.createEntity(this.getProjectileEntityType(), player.getLevel().getChunk(player.getFloorX() >> 4, player.getFloorZ() >> 4), nbt, player);
-        snowball.setMotion(snowball.getMotion().multiply(this.getThrowForce()));
+        this.correctNBT(nbt);
 
-        this.count--;
+        Entity projectile = Entity.createEntity(this.getProjectileEntityType(), player.getLevel().getChunk(player.getFloorX() >> 4, player.getFloorZ() >> 4), nbt, player);
+        if (projectile != null) {
+            projectile.setMotion(projectile.getMotion().multiply(this.getThrowForce()));
+            this.count--;
 
-        if (snowball instanceof EntityProjectile) {
-            ProjectileLaunchEvent ev = new ProjectileLaunchEvent((EntityProjectile) snowball);
+            if (projectile instanceof EntityProjectile) {
+                ProjectileLaunchEvent ev = new ProjectileLaunchEvent((EntityProjectile) projectile);
 
-            player.getServer().getPluginManager().callEvent(ev);
-            if (ev.isCancelled()) {
-                snowball.kill();
+                player.getServer().getPluginManager().callEvent(ev);
+                if (ev.isCancelled()) {
+                    projectile.kill();
+                } else {
+                    projectile.spawnToAll();
+                    player.getLevel().addSound(new LaunchSound(player), player.getViewers().values());
+                }
             } else {
-                snowball.spawnToAll();
-                player.getLevel().addSound(new LaunchSound(player), player.getViewers().values());
+                projectile.spawnToAll();
             }
         } else {
-            snowball.spawnToAll();
+            return false;
         }
-
         return true;
+    }
+
+    protected void correctNBT(CompoundTag nbt) {
+        
     }
 }
