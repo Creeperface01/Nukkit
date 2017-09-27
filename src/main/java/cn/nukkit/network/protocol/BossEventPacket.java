@@ -7,21 +7,22 @@ public class BossEventPacket extends DataPacket {
 
     public static final byte NETWORK_ID = ProtocolInfo.BOSS_EVENT_PACKET;
 
-    /* S2C: Shows the boss-bar to the player. */
+    /* S2C: Shows the bossbar to the player. */
     public static final int TYPE_SHOW = 0;
     /* C2S: Registers a player to a boss fight. */
     public static final int TYPE_REGISTER_PLAYER = 1;
-    /* S2C: Removes the boss-bar from the client. */
+    public static final int TYPE_UPDATE = 1;
+    /* S2C: Removes the bossbar from the client. */
     public static final int TYPE_HIDE = 2;
     /* C2S: Unregisters a player from a boss fight. */
     public static final int TYPE_UNREGISTER_PLAYER = 3;
     /* S2C: Appears not to be implemented. Currently bar percentage only appears to change in response to the target entity's health. */
     public static final int TYPE_HEALTH_PERCENT = 4;
-    /* S2C: Also appears to not be implemented. Title client-side sticks as the target entity's nametag, or their entity type name if not set. */
+    /* S2C: Also appears to not be implemented. Title clientside sticks as the target entity's nametag, or their entity type name if not set. */
     public static final int TYPE_TITLE = 5;
     /* S2C: Not sure on this. Includes color and overlay fields, plus an unknown short. TODO: check this */
     public static final int TYPE_UNKNOWN_6 = 6;
-    /* S2C: Not implemented :( Intended to alter bar appearance, but these currently produce no effect on client-side whatsoever. */
+    /* S2C: Not implemented :( Intended to alter bar appearance, but these currently produce no effect on clientside whatsoever. */
     public static final int TYPE_TEXTURE = 7;
 
     public long bossEid;
@@ -32,7 +33,7 @@ public class BossEventPacket extends DataPacket {
     public short unknown;
     public int color;
     public int overlay;
-
+    
     @Override
     public byte pid() {
         return NETWORK_ID;
