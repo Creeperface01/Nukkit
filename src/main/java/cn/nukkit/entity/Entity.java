@@ -16,9 +16,7 @@ import cn.nukkit.event.player.PlayerInteractEvent;
 import cn.nukkit.event.player.PlayerInteractEvent.Action;
 import cn.nukkit.event.player.PlayerTeleportEvent;
 import cn.nukkit.item.Item;
-import cn.nukkit.level.Level;
-import cn.nukkit.level.Location;
-import cn.nukkit.level.Position;
+import cn.nukkit.level.*;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.*;
 import cn.nukkit.metadata.MetadataValue;
@@ -47,6 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author MagicDroidX
  */
 public abstract class Entity extends Location implements Metadatable {
+
+    public static final double MOTION_THRESHOLD = 0.00001;
 
     public static final int NETWORK_ID = -1;
 
@@ -192,6 +192,8 @@ public abstract class Entity extends Location implements Metadatable {
 
     protected final Map<Integer, Effect> effects = new ConcurrentHashMap<>();
 
+    public Position fromPos;
+
     protected long id;
 
     protected final EntityMetadata dataProperties = new EntityMetadata()
@@ -207,6 +209,8 @@ public abstract class Entity extends Location implements Metadatable {
     public Entity riding = null;
 
     public FullChunk chunk;
+
+    private Dimension dimension;
 
     protected EntityDamageEvent lastDamageCause = null;
 
@@ -227,6 +231,8 @@ public abstract class Entity extends Location implements Metadatable {
     public double lastMotionX;
     public double lastMotionY;
     public double lastMotionZ;
+
+    protected boolean forceMovementUpdate = false;
 
     public double lastYaw;
     public double lastPitch;
@@ -1095,18 +1101,21 @@ public abstract class Entity extends Location implements Metadatable {
         }
 
         if (this.inPortalTicks == 80) {
-            EntityPortalEnterEvent ev = new EntityPortalEnterEvent(this, PortalType.NETHER);
-            getServer().getPluginManager().callEvent(ev);
-
-            //TODO: teleport
+          
         }
-
+        // TODO: Remove this for work nether. (When is fixed).
+        //this.setDimension(this.level.getDimension() == Dimension.OVERWORLD ? Dimension.NETHER : Dimension.OVERWORLD);
+        //this.inPortalTicks = 0;
         this.age += tickDiff;
         this.ticksLived += tickDiff;
         TimingsHistory.activatedEntityTicks++;
 
         Timings.entityBaseTickTimer.stopTiming();
         return hasUpdate;
+    }
+
+    public void setDimension(Dimension dimension) {
+        // Nothing
     }
 
     protected void updateMovement() {
@@ -1133,6 +1142,35 @@ public abstract class Entity extends Location implements Metadatable {
 
             this.addMotion(this.motionX, this.motionY, this.motionZ);
         }
+    }
+
+    protected boolean applyDragBeforeGravity() {
+        return false;
+    }
+
+    public void applyGravity() {
+        this.motionY -= this.getGravity();
+    }
+
+    public void tryChangeMovement() {
+        float friction = 1 - this.getDrag();
+
+        if (this.applyDragBeforeGravity()) {
+            this.motionY *= friction;
+        }
+
+        this.applyGravity();
+
+        if (!this.applyDragBeforeGravity()) {
+            this.motionY *= friction;
+        }
+
+        if (this.onGround) {
+            friction *= this.level.getBlock(this.floor().subtract(0, 1, 0)).getFrictionFactor();
+        }
+
+        this.motionX *= friction;
+        this.motionZ *= friction;
     }
 
     public void addMovement(double x, double y, double z, double yaw, double pitch, double headYaw) {
@@ -1168,8 +1206,15 @@ public abstract class Entity extends Location implements Metadatable {
             return false;
         }
 
+        int tickDiff = currentTick - this.lastUpdate;
+
+        if (tickDiff <= 0) {
+            this.server.getLogger().debug("Expected tick difference of at least 1, got $tickDiff in Entity!");
+            return false;
+        }
+
         if (!this.isAlive()) {
-            ++this.deadTicks;
+            this.deadTicks += tickDiff;
             if (this.deadTicks >= 10) {
                 this.despawnFromAll();
                 if (!this.isPlayer) {
@@ -1179,19 +1224,33 @@ public abstract class Entity extends Location implements Metadatable {
             return this.deadTicks < 10;
         }
 
-        int tickDiff = currentTick - this.lastUpdate;
+        this.lastUpdate = currentTick;
 
-        if (tickDiff <= 0) {
-            return false;
+        this.timing.startTiming();
+
+        if (this.hasMovementUpdate()) {
+            this.tryChangeMovement();
+            this.move(this.motionX, this.motionY, this.motionZ);
+
+            if (Math.abs(this.motionX) <= MOTION_THRESHOLD) {
+                this.motionX = 0;
+            }
+            if (Math.abs(this.motionY) <= MOTION_THRESHOLD) {
+                this.motionY = 0;
+            }
+            if (Math.abs(this.motionZ) <= MOTION_THRESHOLD) {
+                this.motionZ = 0;
+            }
         }
 
-        this.lastUpdate = currentTick;
+        this.updateMovement();
+        this.forceMovementUpdate = false;
 
         boolean hasUpdate = this.entityBaseTick(tickDiff);
 
-        this.updateMovement();
+        this.timing.stopTiming();
 
-        return hasUpdate;
+        return (hasUpdate || this.hasMovementUpdate());
     }
 
     protected boolean updateRidden() {
@@ -1243,6 +1302,22 @@ public abstract class Entity extends Location implements Metadatable {
 
     public final void scheduleUpdate() {
         this.level.updateEntities.put(this.id, this);
+    }
+
+    public final void setForceMovementUpdate() {
+        boolean value = true;
+        this.forceMovementUpdate = value;
+        this.onGround = false;
+    }
+
+    public final boolean hasMovementUpdate() {
+        return (
+                this.forceMovementUpdate ||
+                        Math.abs(this.motionX) > MOTION_THRESHOLD ||
+                        Math.abs(this.motionY) > MOTION_THRESHOLD ||
+                        Math.abs(this.motionZ) > MOTION_THRESHOLD ||
+                        !this.onGround
+        );
     }
 
     public boolean isOnFire() {

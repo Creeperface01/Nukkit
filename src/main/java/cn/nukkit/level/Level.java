@@ -238,9 +238,9 @@ public class Level implements ChunkManager, Metadatable {
     private boolean thundering = false;
     private int thunderTime = 0;
 
-    private long levelCurrentTick = 0;
+    public Dimension dimension;
 
-    private int dimension;
+    private long levelCurrentTick = 0;
 
     public GameRules gameRules;
 
@@ -411,14 +411,14 @@ public class Level implements ChunkManager, Metadatable {
     public void registerGenerator() {
         int size = this.server.getScheduler().getAsyncTaskPoolSize();
         for (int i = 0; i < size; ++i) {
-            this.server.getScheduler().scheduleAsyncTask(new GeneratorRegisterTask(this, this.generatorInstance));
+            this.server.getScheduler().scheduleAsyncTaskToWorker(new GeneratorRegisterTask(this, this.generatorInstance), i);
         }
     }
 
     public void unregisterGenerator() {
         int size = this.server.getScheduler().getAsyncTaskPoolSize();
         for (int i = 0; i < size; ++i) {
-            this.server.getScheduler().scheduleAsyncTask(new GeneratorUnregisterTask(this));
+            this.server.getScheduler().scheduleAsyncTaskToWorker(new GeneratorUnregisterTask(this), i);
         }
     }
 
@@ -1518,7 +1518,7 @@ public class Level implements ChunkManager, Metadatable {
     }
 
     public void updateBlockSkyLight(int x, int y, int z) {
-        //TODO: sky light
+        // TODO: SkyLight
     }
 
     public void updateBlockLight(int x, int y, int z) {
@@ -1666,7 +1666,8 @@ public class Level implements ChunkManager, Metadatable {
                 this.server.getPluginManager().callEvent(ev);
                 if (!ev.isCancelled()) {
                     for (Entity entity : this.getNearbyEntities(new AxisAlignedBB(block.x - 1, block.y - 1, block.z - 1,
-                            block.x + 1, block.y + 1, block.z + 1))) {
+                            block.x + 2, block.y + 2, block.z + 2))) {
+                        entity.setForceMovementUpdate();
                         entity.scheduleUpdate();
                     }
                     ev.getBlock().onUpdate(BLOCK_UPDATE_NORMAL);
@@ -2193,13 +2194,13 @@ public class Level implements ChunkManager, Metadatable {
 
     @Override
     public int getBlockIdAt(int x, int y, int z) {
-        return this.getChunk(x >> 4, z >> 4, true).getBlockId(x & 0x0f, y & 0xff, z & 0x0f);
+        return this.getChunk(x >> 4, z >> 4, true).getBlockId(x & 0x0f, y, z & 0x0f);
     }
 
     @Override
     public void setBlockIdAt(int x, int y, int z, int id) {
         this.blockCache.remove(Level.blockHash(x, y, z));
-        this.getChunk(x >> 4, z >> 4, true).setBlockId(x & 0x0f, y & 0xff, z & 0x0f, id & 0xff);
+        this.getChunk(x >> 4, z >> 4, true).setBlockId(x & 0x0f, y, z & 0x0f, id & 0xff);
         addBlockChange(x, y, z);
         temporalVector.setComponents(x, y, z);
         for (ChunkLoader loader : this.getChunkLoaders(x >> 4, z >> 4)) {
@@ -2208,24 +2209,24 @@ public class Level implements ChunkManager, Metadatable {
     }
 
     public int getBlockExtraDataAt(int x, int y, int z) {
-        return this.getChunk(x >> 4, z >> 4, true).getBlockExtraData(x & 0x0f, y & 0xff, z & 0x0f);
+        return this.getChunk(x >> 4, z >> 4, true).getBlockExtraData(x & 0x0f, y, z & 0x0f);
     }
 
     public void setBlockExtraDataAt(int x, int y, int z, int id, int data) {
-        this.getChunk(x >> 4, z >> 4, true).setBlockExtraData(x & 0x0f, y & 0xff, z & 0x0f, (data << 8) | id);
+        this.getChunk(x >> 4, z >> 4, true).setBlockExtraData(x & 0x0f, y, z & 0x0f, (data << 8) | id);
 
         this.sendBlockExtraData(x, y, z, id, data);
     }
 
     @Override
     public int getBlockDataAt(int x, int y, int z) {
-        return this.getChunk(x >> 4, z >> 4, true).getBlockData(x & 0x0f, y & 0xff, z & 0x0f);
+        return this.getChunk(x >> 4, z >> 4, true).getBlockData(x & 0x0f, y, z & 0x0f);
     }
 
     @Override
     public void setBlockDataAt(int x, int y, int z, int data) {
         this.blockCache.remove(Level.blockHash(x, y, z));
-        this.getChunk(x >> 4, z >> 4, true).setBlockData(x & 0x0f, y & 0xff, z & 0x0f, data & 0x0f);
+        this.getChunk(x >> 4, z >> 4, true).setBlockData(x & 0x0f, y, z & 0x0f, data & 0x0f);
         addBlockChange(x, y, z);
         temporalVector.setComponents(x, y, z);
         for (ChunkLoader loader : this.getChunkLoaders(x >> 4, z >> 4)) {
@@ -2234,19 +2235,19 @@ public class Level implements ChunkManager, Metadatable {
     }
 
     public int getBlockSkyLightAt(int x, int y, int z) {
-        return this.getChunk(x >> 4, z >> 4, true).getBlockSkyLight(x & 0x0f, y & 0xff, z & 0x0f);
+        return this.getChunk(x >> 4, z >> 4, true).getBlockSkyLight(x & 0x0f, y, z & 0x0f);
     }
 
     public void setBlockSkyLightAt(int x, int y, int z, int level) {
-        this.getChunk(x >> 4, z >> 4, true).setBlockSkyLight(x & 0x0f, y & 0xff, z & 0x0f, level & 0x0f);
+        this.getChunk(x >> 4, z >> 4, true).setBlockSkyLight(x & 0x0f, y, z & 0x0f, level & 0x0f);
     }
 
     public int getBlockLightAt(int x, int y, int z) {
-        return this.getChunk(x >> 4, z >> 4, true).getBlockLight(x & 0x0f, y & 0xff, z & 0x0f);
+        return this.getChunk(x >> 4, z >> 4, true).getBlockLight(x & 0x0f, y, z & 0x0f);
     }
 
     public void setBlockLightAt(int x, int y, int z, int level) {
-        this.getChunk(x >> 4, z >> 4, true).setBlockLight(x & 0x0f, y & 0xff, z & 0x0f, level & 0x0f);
+        this.getChunk(x >> 4, z >> 4, true).setBlockLight(x & 0x0f, y, z & 0x0f, level & 0x0f);
     }
 
     public int getBiomeId(int x, int z) {
@@ -2777,6 +2778,10 @@ public class Level implements ChunkManager, Metadatable {
         return this.provider.getName();
     }
 
+    public Dimension getDimension() {
+        return this.dimension;
+    }
+
     public String getFolderName() {
         return this.folderName;
     }
@@ -3105,10 +3110,6 @@ public class Level implements ChunkManager, Metadatable {
             players = this.getPlayers().values();
         }
         this.sendWeather(players.stream().toArray(Player[]::new));
-    }
-
-    public int getDimension() {
-        return dimension;
     }
 
     public boolean canBlockSeeSky(Vector3 pos) {

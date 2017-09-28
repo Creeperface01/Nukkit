@@ -432,9 +432,15 @@ public class Server {
         if (this.getDefaultLevel() == null) {
             String defaultName = this.getPropertyString("level-name", "world");
             if (defaultName == null || "".equals(defaultName.trim())) {
-                this.getLogger().warning("level-name cannot be null, using default");
-                defaultName = "world";
-                this.setPropertyString("level-name", defaultName);
+                long seed;
+                String seedString = String.valueOf(this.getProperty("level-seed", System.currentTimeMillis()));
+                try {
+                    seed = Long.valueOf(seedString);
+                } catch (NumberFormatException e) {
+                    seed = seedString.hashCode();
+                }
+                this.getLogger().warning("Level-Name cannot be null, using DEFAULT");
+                this.generateLevel(defaultName, seed == 0 ? System.currentTimeMillis() : seed);
             }
 
             if (!this.loadLevel(defaultName)) {
@@ -952,6 +958,7 @@ public class Server {
                 }
 
                 this.logger.critical(this.getLanguage().translateString("nukkit.level.tickError", new String[]{level.getName(), e.toString()}));
+                e.printStackTrace();
                 this.logger.logException(e);
             }
         }
