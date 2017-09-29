@@ -155,9 +155,6 @@ public class NetworkInventoryAction {
                     case SOURCE_TYPE_CRAFTING_REMOVE_INGREDIENT:
                     case SOURCE_TYPE_CRAFTING_RESULT:
                     case SOURCE_TYPE_CRAFTING_USE_INGREDIENT:
-                        System.out.println("crafting, old: " +
-                                           this.oldItem + "   new: " + this.newItem +
-                                           "    slot: " + this.inventorySlot);
                         window = player.getCraftingGrid();
                         return new SlotChangeAction(window, this.inventorySlot, this.oldItem, this.newItem);
                     case SOURCE_TYPE_CONTAINER_DROP_CONTENTS:
