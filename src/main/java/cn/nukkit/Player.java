@@ -33,6 +33,7 @@ import cn.nukkit.inventory.*;
 import cn.nukkit.inventory.transaction.InventoryTransaction;
 import cn.nukkit.inventory.transaction.SimpleInventoryTransaction;
 import cn.nukkit.inventory.transaction.action.InventoryAction;
+import cn.nukkit.inventory.transaction.action.SlotChangeAction;
 import cn.nukkit.inventory.transaction.data.ReleaseItemData;
 import cn.nukkit.inventory.transaction.data.UseItemData;
 import cn.nukkit.inventory.transaction.data.UseItemOnEntityData;
@@ -3128,8 +3129,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         try {
                             InventoryAction a = networkInventoryAction.createInventoryAction(this);
                             if (a != null) {
-                                if (a instanceof SimpleInventoryTransaction) {
-                                    if (((SimpleInventoryTransaction) a).inventory instanceof CraftingGrid) isCrafting = true;
+                                if (a instanceof SlotChangeAction) {
+                                    if (((SlotChangeAction) a).inventory instanceof CraftingGrid) isCrafting = true;
                                 }
                                 actions.add(a);
                             }
