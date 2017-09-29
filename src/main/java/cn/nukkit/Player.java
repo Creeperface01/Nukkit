@@ -2563,13 +2563,13 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
                 case ProtocolInfo.CRAFTING_EVENT_PACKET:
                     CraftingEventPacket craftingEventPacket = (CraftingEventPacket) packet;
-                    System.out.println("Received CraftingEvent");
+
                     if (!this.spawned || !this.isAlive()) {
                         break;
                     }
 
                     Recipe recipe = this.server.getCraftingManager().getRecipe(craftingEventPacket.id);
-                    System.out.println("Is recipe null? -"+(recipe == null ? "Yes" : "No"));
+
                     if (this.craftingType == CRAFTING_ANVIL) {
                         Inventory inv = this.windowIndex.get(craftingEventPacket.windowId);
                         AnvilInventory anvilInventory = inv instanceof AnvilInventory ? (AnvilInventory) inv : null;
@@ -2607,15 +2607,14 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         this.dataPacket(containerClosePacket);
                         break;
                     }
-                    System.out.println("Halfway there");
+
                     if ((recipe == null) || (((recipe instanceof BigShapelessRecipe) || (recipe instanceof BigShapedRecipe)) && this.craftingType == CRAFTING_SMALL)) {
                         this.inventory.sendContents(this);
                         break;
                     }
-                    System.out.println("Recipe gives sense");
+
                     for (int i = 0; i < craftingEventPacket.input.length; i++) {
                         Item inputItem = craftingEventPacket.input[i];
-                        System.out.println("In input, theres item called "+inputItem.getName());
                         if (inputItem.getDamage() == -1 || inputItem.getDamage() == 0xffff) {
                             inputItem.setDamage(null);
                         }
@@ -2628,36 +2627,34 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     boolean canCraft = true;
 
                     if (craftingEventPacket.input.length == 0) {
-                        /*Recipe[] recipes = getServer().getCraftingManager().getRecipesByResult(craftingEventPacket.output[0]);
+                        Recipe[] recipes = getServer().getCraftingManager().getRecipesByResult(craftingEventPacket.output[0]);
+
                         if (recipes == null || recipes.length == 0) {
                             this.getServer().getLogger().debug("Uknown recipe for output (" + craftingEventPacket.output[0] + ")");
                             return;
                         }
 
-                        recipe = null;*/
+                        recipe = null;
 
                         ArrayList<Item> ingredientz = new ArrayList<>();
 
                         recipeloop:
-                        //for (Recipe rec : recipes) {
+                        for (Recipe rec : recipes) {
                             ingredientz.clear();
 
-                            if (recipe instanceof ShapedRecipe) {
-                                Map<Integer, Map<Integer, Item>> ingredients = ((ShapedRecipe) recipe).getIngredientMap();
-                                System.out.println("ShapedRecipe");
+                            if (rec instanceof ShapedRecipe) {
+                                Map<Integer, Map<Integer, Item>> ingredients = ((ShapedRecipe) rec).getIngredientMap();
                                 for (Map<Integer, Item> map : ingredients.values()) {
                                     for (Item ingredient : map.values()) {
-                                        System.out.println("Ingredient "+ingredient.getName());
                                         if (ingredient != null && ingredient.getId() != Item.AIR) {
                                             ingredientz.add(ingredient);
                                         }
                                     }
                                 }
-                            } else if (recipe instanceof ShapelessRecipe) {
+                            } else if (rec instanceof ShapelessRecipe) {
                                 ShapelessRecipe recipe0 = (ShapelessRecipe) rec;
-                                System.out.println("Shapeless recipe");
+
                                 for (Item ingredient : recipe0.getIngredientList()) {
-                                    System.out.println("Ingredient "+ingredient.getName());
                                     if (ingredient != null && ingredient.getId() != Item.AIR) {
                                         ingredientz.add(ingredient);
                                     }
@@ -2697,10 +2694,10 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                             for (Item ingredient : serialized.values()) {
                                 this.inventory.removeItem(ingredient);
                             }
-                            System.out.println("Got here");
+
                             this.inventory.addItem(recipe.getResult());
-                            //break;
-                        //}
+                            break;
+                        }
 
                         if (recipe == null) {
                             this.server.getLogger().debug("(1) Unmatched desktop recipe " + craftingEventPacket.id + " from player " + this.getName());
@@ -2710,11 +2707,10 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         ArrayList<Item> ingredientz = new ArrayList<>();
 
                         if (recipe instanceof ShapedRecipe) {
-                            System.out.println("ShapedRecipe");
+
                             Map<Integer, Map<Integer, Item>> ingredients = ((ShapedRecipe) recipe).getIngredientMap();
                             for (Map<Integer, Item> map : ingredients.values()) {
                                 for (Item ingredient : map.values()) {
-                                    System.out.println("Ingredient "+ingredient.getName());
                                     if (ingredient != null && ingredient.getId() != Item.AIR) {
                                         ingredientz.add(ingredient);
                                     }
@@ -2722,9 +2718,8 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                             }
                         } else if (recipe instanceof ShapelessRecipe) {
                             ShapelessRecipe recipe0 = (ShapelessRecipe) recipe;
-                            System.out.println("ShapelessRecipe");
+
                             for (Item ingredient : recipe0.getIngredientList()) {
-                                System.out.println("Ingredient "+ingredient.getName());
                                 if (ingredient != null && ingredient.getId() != Item.AIR) {
                                     ingredientz.add(ingredient);
                                 }
