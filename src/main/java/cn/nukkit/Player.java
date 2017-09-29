@@ -3128,7 +3128,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         try {
                             InventoryAction a = networkInventoryAction.createInventoryAction(this);
                             if (a != null) {
-                                if (a.inventory instanceof CraftingGrid) isCrafting = true;
+                                if (a instanceof SimpleInventoryTransaction) {
+                                    if (((SimpleInventoryTransaction) a).inventory instanceof CraftingGrid) isCrafting = true;
+                                }
                                 actions.add(a);
                             }
                         } catch (Throwable e) {
