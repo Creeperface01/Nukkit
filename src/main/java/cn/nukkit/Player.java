@@ -3122,12 +3122,13 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
                     InventoryTransactionPacket transactionPacket = (InventoryTransactionPacket) packet;
 
+                    boolean isCrafting = false;
                     List<InventoryAction> actions = new ArrayList<>();
                     for (NetworkInventoryAction networkInventoryAction : transactionPacket.actions) {
                         try {
                             InventoryAction a = networkInventoryAction.createInventoryAction(this);
-
                             if (a != null) {
+                                if (a.inventory instanceof CraftingGrid) isCrafting = true;
                                 actions.add(a);
                             }
                         } catch (Throwable e) {
@@ -3141,7 +3142,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         case InventoryTransactionPacket.TYPE_NORMAL:
                             InventoryTransaction transaction = new SimpleInventoryTransaction(this, actions);
 
-                            if (!transaction.execute()) {
+                            if (!transaction.execute() && !isCrafting) {
                                 for (Inventory inventory : transaction.getInventories()) {
                                     inventory.sendContents(this);
                                     if (inventory instanceof PlayerInventory) {
