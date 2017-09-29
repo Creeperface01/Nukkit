@@ -2676,11 +2676,11 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                 serialized.put(hash, ingredient);
                             }
 
-                            for (Item ingredient : serialized.values()) {
+                            /*for (Item ingredient : serialized.values()) {
                                 if (!this.inventory.contains(ingredient)) {
                                     continue recipeloop;
                                 }
-                            }
+                            }*/
 
                             recipe = rec;
 
@@ -2692,9 +2692,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                                 break packetswitch;
                             }
 
-                            for (Item ingredient : serialized.values()) {
+                            /*for (Item ingredient : serialized.values()) {
                                 this.inventory.removeItem(ingredient);
-                            }
+                            }*/
 
                             this.inventory.addItem(recipe.getResult());
                             break;
@@ -2741,12 +2741,12 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                             serialized.put(hash, ingredient);
                         }
 
-                        for (Item ingredient : serialized.values()) {
+                        /*for (Item ingredient : serialized.values()) {
                             if (!this.inventory.contains(ingredient)) {
                                 canCraft = false;
                                 break;
                             }
-                        }
+                        }*/
 
                         if (!canCraft) {
                             this.server.getLogger().debug("(1) Unmatched recipe " + craftingEventPacket.id + " from player " + this.getName() + "  not anough ingredients");
@@ -2761,9 +2761,9 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                             break;
                         }
 
-                        for (Item ingredient : serialized.values()) {
+                        /*for (Item ingredient : serialized.values()) {
                             this.inventory.removeItem(ingredient);
-                        }
+                        }*/
 
                         this.inventory.addItem(recipe.getResult());
 
