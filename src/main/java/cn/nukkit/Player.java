@@ -2628,7 +2628,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     boolean canCraft = true;
 
                     if (craftingEventPacket.input.length == 0) {
-                        Recipe[] recipes = getServer().getCraftingManager().getRecipesByResult(craftingEventPacket.output[0]);
+                        Recipe[] recipes = new Recipe[]{recipe};
 
                         if (recipes == null || recipes.length == 0) {
                             this.getServer().getLogger().debug("Uknown recipe for output (" + craftingEventPacket.output[0] + ")");
