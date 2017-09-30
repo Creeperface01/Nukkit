@@ -10,6 +10,7 @@ import cn.nukkit.inventory.Fuel;
 import cn.nukkit.item.enchantment.Enchantment;
 import cn.nukkit.level.Level;
 import cn.nukkit.math.BlockFace;
+import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
@@ -29,22 +30,6 @@ import java.util.regex.Pattern;
  * Nukkit Project
  */
 public class Item implements Cloneable {
-
-    private static CompoundTag parseCompoundTag(byte[] tag) {
-        try {
-            return NBTIO.read(tag, ByteOrder.LITTLE_ENDIAN);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private byte[] writeCompoundTag(CompoundTag tag) {
-        try {
-            return NBTIO.write(tag, ByteOrder.LITTLE_ENDIAN);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     //All Block IDs are here too
     public static final int AIR = 0;
@@ -160,7 +145,7 @@ public class Item implements Cloneable {
     public static final int CLAY_BLOCK = 82;
     public static final int REEDS = 83;
     public static final int SUGARCANE_BLOCK = 83;
-
+    public static final int JUKEBOX = 84;
     public static final int FENCE = 85;
     public static final int PUMPKIN = 86;
     public static final int NETHERRACK = 87;
@@ -310,6 +295,11 @@ public class Item implements Cloneable {
 
     public static final int END_ROD = 208;
     public static final int END_GATEWAY = 209;
+
+    public static final int MAGMA = 213;
+    public static final int BLOCK_NETHER_WART_BLOCK = 214;
+    public static final int RED_NETHER_BRICK = 215;
+    public static final int BONE_BLOCK = 216;
 
     public static final int SHULKER_BOX = 218;
     public static final int PURPLE_GLAZED_TERRACOTTA = 219;
@@ -562,6 +552,19 @@ public class Item implements Cloneable {
 
     public static final int GOLDEN_APPLE_ENCHANTED = 466;
 
+    public static final int RECORD_13 = 500;
+    public static final int RECORD_CAT = 501;
+    public static final int RECORD_BLOCKS = 502;
+    public static final int RECORD_CHIRP = 503;
+    public static final int RECORD_FAR = 504;
+    public static final int RECORD_MALL = 505;
+    public static final int RECORD_MELLOHI = 506;
+    public static final int RECORD_STAL = 507;
+    public static final int RECORD_STRAD = 508;
+    public static final int RECORD_WARD = 509;
+    public static final int RECORD_11 = 510;
+    public static final int RECORD_WAIT = 511;
+
     public static Class[] list = null;
 
     protected Block block = null;
@@ -588,7 +591,7 @@ public class Item implements Cloneable {
 
     public Item(int id, Integer meta, int count, String name) {
         this.id = id & 0xffff;
-        if (meta != null) {
+        if (meta != null && meta >= 0) {
             this.meta = meta & 0xffff;
         } else {
             this.hasMeta = false;
@@ -1146,7 +1149,7 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.IRON_HORSE_ARMOR, 0));
         addCreativeItem(Item.get(Item.GOLD_HORSE_ARMOR, 0));
         addCreativeItem(Item.get(Item.DIAMOND_HORSE_ARMOR, 0));
-        
+
         addCreativeItem(Item.get(Item.SPAWN_EGG, 10)); //Chicken
         addCreativeItem(Item.get(Item.SPAWN_EGG, 11)); //Cow
         addCreativeItem(Item.get(Item.SPAWN_EGG, 12)); //Pig
@@ -1155,7 +1158,7 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.SPAWN_EGG, 16)); //Mooshroom
         addCreativeItem(Item.get(Item.SPAWN_EGG, 17)); //Squid
         addCreativeItem(Item.get(Item.SPAWN_EGG, 19)); //Bat 
-		//addCreativeItem(Item.get(Item.SPAWN_EGG, 20)); //Iron Golem
+        //addCreativeItem(Item.get(Item.SPAWN_EGG, 20)); //Iron Golem
         //addCreativeItem(Item.get(Item.SPAWN_EGG, 21)); //Snow Golem
         addCreativeItem(Item.get(Item.SPAWN_EGG, 22)); //Ocelot
         addCreativeItem(Item.get(Item.SPAWN_EGG, 23)); //Horse
@@ -1183,7 +1186,7 @@ public class Item implements Cloneable {
         addCreativeItem(Item.get(Item.SPAWN_EGG, 49)); //Guardian
         addCreativeItem(Item.get(Item.SPAWN_EGG, 50)); //ElderGuardian
         addCreativeItem(Item.get(Item.SPAWN_EGG, 54)); //Shulker
-        
+
         addCreativeItem(Item.get(Item.FIRE_CHARGE, 0));
         addCreativeItem(Item.get(Item.WOODEN_SWORD));
         addCreativeItem(Item.get(Item.WOODEN_HOE));
@@ -1835,7 +1838,7 @@ public class Item implements Cloneable {
         return lines.toArray(new String[0]);
     }
 
-    public void setLore(String... lines) {
+    public Item setLore(String... lines) {
         CompoundTag tag;
         if (!this.hasCompoundTag()) {
             tag = new CompoundTag();
@@ -1855,6 +1858,7 @@ public class Item implements Cloneable {
         }
 
         this.setNamedTag(tag);
+        return this;
     }
 
     public Tag getNamedTagEntry(String name) {
@@ -1869,16 +1873,24 @@ public class Item implements Cloneable {
     public CompoundTag getNamedTag() {
         if (!this.hasCompoundTag()) {
             return null;
-        } else if (this.cachedNBT != null) {
-            return this.cachedNBT;
         }
-        return this.cachedNBT = parseCompoundTag(this.tags);
+
+        if (this.cachedNBT == null) {
+            this.cachedNBT = parseCompoundTag(this.tags);
+        }
+
+        if (this.cachedNBT != null) {
+            this.cachedNBT.setName("");
+        }
+
+        return this.cachedNBT;
     }
 
     public Item setNamedTag(CompoundTag tag) {
         if (tag.isEmpty()) {
             return this.clearNamedTag();
         }
+        tag.setName(null);
 
         this.cachedNBT = tag;
         this.tags = writeCompoundTag(tag);
@@ -1890,12 +1902,33 @@ public class Item implements Cloneable {
         return this.setCompoundTag(new byte[0]);
     }
 
+    public static CompoundTag parseCompoundTag(byte[] tag) {
+        try {
+            return NBTIO.read(tag, ByteOrder.LITTLE_ENDIAN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] writeCompoundTag(CompoundTag tag) {
+        try {
+            tag.setName("");
+            return NBTIO.write(tag, ByteOrder.LITTLE_ENDIAN);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public int getCount() {
         return count;
     }
 
     public void setCount(int count) {
         this.count = count;
+    }
+
+    public boolean isNull() {
+        return this.count <= 0 || this.id == AIR;
     }
 
     final public String getName() {
@@ -2041,6 +2074,22 @@ public class Item implements Cloneable {
         return false;
     }
 
+    /**
+     * Called when a player uses the item on air, for example throwing a projectile.
+     * Returns whether the item was changed, for example count decrease or durability change.
+     */
+    public boolean onClickAir(Player player, Vector3 directionVector) {
+        return false;
+    }
+
+    /**
+     * Called when a player is using this item and releases it. Used to handle bow shoot actions.
+     * Returns whether the item was changed, for example count decrease or durability change.
+     */
+    public boolean onReleaseUsing(Player player) {
+        return false;
+    }
+
     @Override
     public final boolean equals(Object item) {
         return item instanceof Item && this.equals((Item) item, true);
@@ -2051,27 +2100,41 @@ public class Item implements Cloneable {
     }
 
     public final boolean equals(Item item, boolean checkDamage, boolean checkCompound) {
-        return this.getId() == item.getId() && (!checkDamage || this.getDamage() == item.getDamage()) && (!checkCompound || Arrays.equals(this.getCompoundTag(), item.getCompoundTag()));
-    }
-
-    public final boolean deepEquals(Item item) {
-        return deepEquals(item, true);
-    }
-
-    public final boolean deepEquals(Item item, boolean checkDamage) {
-        return deepEquals(item, checkDamage, true);
-    }
-
-    public final boolean deepEquals(Item item, boolean checkDamage, boolean checkCompound) {
-        if (this.equals(item, checkDamage, checkCompound)) {
-            return true;
-        } else if (item.hasCompoundTag()) {
-            return item.getNamedTag().equals(this.getNamedTag());
-        } else if (this.hasCompoundTag()) {
-            return this.getNamedTag().equals(item.getNamedTag());
+        if (this.getId() == item.getId() && (!checkDamage || this.getDamage() == item.getDamage())) {
+            if (checkCompound) {
+                if (Arrays.equals(this.getCompoundTag(), item.getCompoundTag())) {
+                    return true;
+                } else if (this.hasCompoundTag() && item.hasCompoundTag()) {
+                    return this.getNamedTag().equals(item.getNamedTag());
+                }
+            } else {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Returns whether the specified item stack has the same ID, damage, NBT and count as this item stack.
+     */
+    public final boolean equalsExact(Item other) {
+        return this.equals(other, true, true) && this.count == other.count;
+    }
+
+    @Deprecated
+    public final boolean deepEquals(Item item) {
+        return equals(item, true);
+    }
+
+    @Deprecated
+    public final boolean deepEquals(Item item, boolean checkDamage) {
+        return equals(item, checkDamage, true);
+    }
+
+    @Deprecated
+    public final boolean deepEquals(Item item, boolean checkDamage, boolean checkCompound) {
+        return equals(item, checkDamage, checkCompound);
     }
 
     @Override
