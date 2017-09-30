@@ -746,7 +746,7 @@ public class Item implements Cloneable {
             list[EXPERIENCE_BOTTLE] = ItemExpBottle.class; //384
             //TODO: list[FIRE_CHARGE] = ItemFireCharge.class; //385
             //TODO: list[BOOK_AND_QUILL] = ItemBookAndQuill.class; //386
-            list[WRITTEN_BOOK] = ItemWrittenBook.class; //387
+            list[WRITTEN_BOOK] = ItemBookWritten.class; //387
             list[EMERALD] = ItemEmerald.class; //388
             list[ITEM_FRAME] = ItemItemFrame.class; //389
             list[FLOWER_POT] = ItemFlowerPot.class; //390
