@@ -2608,6 +2608,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
 
                     boolean canCraft = true;
+                    Map<String, Item> realSerialized = new HashMap<>();
                     
                     for (Recipe rec : recipes) {
                         ArrayList<Item> ingredientz = new ArrayList<>();
@@ -2665,6 +2666,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         }
                         if (!isPossible) continue;
                         recipe = rec;
+                        realSerialized = serialized;
                         break;
                     }
 
@@ -2673,7 +2675,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         return;
                     }
 
-                    CraftItemEvent craftItemEvent = new CraftItemEvent(this, serialized.values().stream().toArray(Item[]::new), recipe);
+                    CraftItemEvent craftItemEvent = new CraftItemEvent(this, realSerialized.values().stream().toArray(Item[]::new), recipe);
                     getServer().getPluginManager().callEvent(craftItemEvent);
 
                     if (craftItemEvent.isCancelled()) {
@@ -2681,7 +2683,7 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                         break;
                     }
 
-                    for (Item ingredient : serialized.values()) {
+                    for (Item ingredient : realSerialized.values()) {
                         this.craftingGrid.removeFromAll(ingredient);
                     }
 
