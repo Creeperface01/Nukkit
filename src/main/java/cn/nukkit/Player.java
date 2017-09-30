@@ -2572,6 +2572,20 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
                     }
 
                     Recipe recipe = this.server.getCraftingManager().getRecipe(craftingEventPacket.id);
+                    Recipe[] recipes = this.server.getCraftingManager().getRecipesByResult(craftingEventPacket.output[0]);
+                    
+                    boolean isValid = false;
+                    for (Recipe rec : recipes){
+                        if (rec.getId().equals(recipe.getId())) {
+                            isValid = true;   
+                            break;
+                        }
+                    }
+                    
+                    if (!isValid){
+                        this.server.getLogger().debug("(1) Wrong recipe " + craftingEventPacket.id + " from player " + this.getName() + "  output does not exist");
+                        return;
+                    }
 
                     if (!this.windowIndex.containsKey(craftingEventPacket.windowId)) {
                         this.inventory.sendContents(this);
