@@ -11,11 +11,36 @@ public class ItemBookWritten extends Item {
     protected boolean isWritten = false;
 
     public ItemBookWritten() {
-        super (Item.WRITTEN_BOOK);
+        this (Integer.valueOf(0), 1);
     }
-
     public ItemBookWritten (String author, String title, String[] pages) {
-        super (Item.WRITTEN_BOOK);
+        this (Integer.valueOf(0), 1);
+        this.writeBook(author, title, pages);
+    }
+    public ItemBookWritten (String author, String title, ListTag<CompoundTag> pages) {
+        this (Integer.valueOf(0), 1);
+        this.writeBook(author, title, pages);
+    }
+    public ItemBookWritten(Integer meta) {
+        this (meta, 1);
+    }
+    public ItemBookWritten (Integer meta, String author, String title, String[] pages) {
+        this (meta, 1);
+        this.writeBook(author, title, pages);
+    }
+    public ItemBookWritten (Integer meta, String author, String title, ListTag<CompoundTag> pages) {
+        this (meta, 1);
+        this.writeBook(author, title, pages);
+    }
+    public ItemBookWritten(Integer meta, int count) {
+        super (Item.WRITTEN_BOOK, Integer.valueOf(0), count, "Book");
+    }
+    public ItemBookWritten (Integer meta, Integer count, String author, String title, String[] pages) {
+        this (meta, count);
+        this.writeBook(author, title, pages);
+    }
+    public ItemBookWritten (Integer meta, Integer count, String author, String title, ListTag<CompoundTag> pages) {
+        this (meta, count);
         this.writeBook(author, title, pages);
     }
 
@@ -26,7 +51,7 @@ public class ItemBookWritten extends Item {
         }
         return writeBook(author, title, pageList);
     }
-    public Item writeBook (String author, String title, ListTag<CompoundTag>  pages){
+    public Item writeBook (String author, String title, ListTag<CompoundTag> pages){
         if (pages.size() > 50 || pages.size() <= 0) return this; //Minecraft does not support more than 50 pages
         if (this.isWritten) return this; //Book content can only be updated once
         CompoundTag tag;
@@ -47,6 +72,14 @@ public class ItemBookWritten extends Item {
 
         this.isWritten = true;
         return this.setNamedTag(tag);
+    }
+    public String getAuthor(){
+        if (!this.isWritten) return "";
+        return this.getNamedTag().getString("author");
+    }
+    public String getTitle(){
+        if (!this.isWritten) return "Book";
+        return this.getNamedTag().getString("title");
     }
 
 }
