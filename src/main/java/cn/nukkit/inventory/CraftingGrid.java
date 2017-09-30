@@ -35,11 +35,9 @@ public class CraftingGrid extends BaseInventory {
 
     public void removeFromAll(Item item) {
         int count = item.getCount();
-        System.out.println("Have to remove "+count+" items");
 
         for (int i = 0; i < this.size; i++) {
             Item target = this.getItem(i);
-            System.out.println("At "+i+", we have "+target.getName()+"x"+target.getCount());
 
             if (target.equals(item, true, false)) {
                 count--;
@@ -49,7 +47,6 @@ public class CraftingGrid extends BaseInventory {
             }
         }
 
-        System.out.println("Finally, there is "+count);
         if (count != 0) {
             MainLogger.getLogger().debug("Unexpected ingredient count (" + count + ") in crafting grid");
         }
