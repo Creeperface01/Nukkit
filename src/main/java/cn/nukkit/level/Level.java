@@ -671,28 +671,30 @@ public class Level implements ChunkManager, Metadatable {
         }
     }
 
-    public void sendTime(Player... players) {
-        sendTime(players, false);
+    public void sendTime(Player player) {
+        sendTime(player, false);
     }
     
-    public void sendTime(Player... players, boolean updateGamerules) {
+    public void sendTime(Player player, boolean updateGamerules) {
         SetTimePacket pk = new SetTimePacket();
         pk.time = (int) this.time;
 
-        Server.broadcastPacket(players, pk);
+        player.dataPacket(pk);
         
         if (updateGameRules) {
-            for (Player player : players) {
-                player.sendGameRules();
-            }
+            player.sendGameRules();
         }
     }
 
     public void sendTime() {
-        sendTime(this.players.values().stream().toArray(Player[]::new));
+        for (Player player : this.players.values()){
+            sendTime(player);
+        }
     }
     public void sendTime(boolean updateGamerules){
-        sendTime(this.players.values().stream().toArray(Player[]::new), false);   
+        for (Player player : this.players.values()){
+            sendTime(player, false);
+        }
     }
 
     public GameRules getGameRules() {
