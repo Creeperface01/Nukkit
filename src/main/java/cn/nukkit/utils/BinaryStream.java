@@ -406,15 +406,39 @@ public class BinaryStream {
     public RuleData getRuleData() {
         RuleData rule = new RuleData();
         rule.name = this.getString();
-        rule.unknown1 = this.getBoolean();
+        rule.type = (byte) this.getByte();
         rule.unknown2 = this.getBoolean();
+
+        switch (rule.type){
+            case 1:
+                rule.value = this.getBoolean();
+                break;
+            case 2:
+                rule.value = this.getInt();
+                break;
+            case 3:
+                rule.value = this.getFloat();
+                break;
+        }
         return rule;
     }
 
     public void putRuleData(RuleData rule) {
         this.putString(rule.name);
-        this.putBoolean(rule.unknown1);
+        this.putByte(rule.type);
         this.putBoolean(rule.unknown2);
+
+        switch (rule.type){
+            case 1:
+                this.putBoolean((boolean) rule.value);
+                break;
+            case 2:
+                this.putInt((int) rule.value);
+                break;
+            case 3:
+                this.putFloat((float) rule.value);
+                break;
+        }
     }
 
     /**
