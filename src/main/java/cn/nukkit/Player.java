@@ -1968,8 +1968,28 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
     }
     
     public void addAdditionalRule(RuleData data){
+        addAdditionalRule(data, true);
+    }
+    public void addAdditionalRule(RuleData data, boolean send){
         if (data.name.equals("dodaylightcycle")) return;
         if (!this.additionalRules.contains(data)) this.additionalRules.add(data);   
+        if (send) sendGameRules();
+    }
+    
+    public void updateAdditionalRule(RuleData data){
+        updateAdditionalRule(data, true);
+    }
+    public void updateAdditionalRule(RuleData data, boolean send){
+        removeAdditionalRule(data, false);
+        addAdditionalRule(data, send);
+    }
+    
+    public void removeAdditionalRule(RuleData data){
+        removeAdditionalRule(data, true);
+    }
+    public void removeAdditionalRule(RuleData data, boolean send){
+        if (this.additionalRules.contains(data)) this.additionalRules.remove(data);
+        if (send) sendGameRules();
     }
  
     public void sendGameRules() {
