@@ -675,7 +675,7 @@ public class Level implements ChunkManager, Metadatable {
         sendTime(player, false);
     }
     
-    public void sendTime(Player player, boolean updateGamerules) {
+    public void sendTime(Player player, boolean updateGameRules) {
         SetTimePacket pk = new SetTimePacket();
         pk.time = (int) this.time;
 
@@ -691,9 +691,9 @@ public class Level implements ChunkManager, Metadatable {
             sendTime(player);
         }
     }
-    public void sendTime(boolean updateGamerules){
+    public void sendTime(boolean updateGameRules){
         for (Player player : this.players.values()){
-            sendTime(player, false);
+            sendTime(player, updateGameRules);
         }
     }
 
