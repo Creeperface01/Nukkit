@@ -671,21 +671,30 @@ public class Level implements ChunkManager, Metadatable {
         }
     }
 
-    public void sendTime(Player... players) {
-        /*if (this.stopTime) { //TODO
-            SetTimePacket pk0 = new SetTimePacket();
-            pk0.time = (int) this.time;
-            player.dataPacket(pk0);
-        }*/
-
+    public void sendTime(Player player) {
+        sendTime(player, false);
+    }
+    
+    public void sendTime(Player player, boolean updateGameRules) {
         SetTimePacket pk = new SetTimePacket();
         pk.time = (int) this.time;
 
-        Server.broadcastPacket(players, pk);
+        player.dataPacket(pk);
+        
+        if (updateGameRules) {
+            player.sendGameRules();
+        }
     }
 
     public void sendTime() {
-        sendTime(this.players.values().stream().toArray(Player[]::new));
+        for (Player player : this.players.values()){
+            sendTime(player);
+        }
+    }
+    public void sendTime(boolean updateGameRules){
+        for (Player player : this.players.values()){
+            sendTime(player, updateGameRules);
+        }
     }
 
     public GameRules getGameRules() {
@@ -2788,12 +2797,12 @@ public class Level implements ChunkManager, Metadatable {
 
     public void stopTime() {
         this.stopTime = true;
-        this.sendTime();
+        this.sendTime(true);
     }
 
     public void startTime() {
         this.stopTime = false;
-        this.sendTime();
+        this.sendTime(true);
     }
 
     @Override

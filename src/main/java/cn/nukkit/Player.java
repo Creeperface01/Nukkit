@@ -1917,11 +1917,12 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
         startGamePacket.spawnY = (int) spawnPosition.y;
         startGamePacket.spawnZ = (int) spawnPosition.z;
         startGamePacket.hasAchievementsDisabled = true;
-        startGamePacket.dayCycleStopTime = -1;
+        startGamePacket.dayCycleStopTime = this.level.getTime();
         startGamePacket.eduMode = false;
         startGamePacket.rainLevel = 0;
         startGamePacket.lightningLevel = 0;
         startGamePacket.commandsEnabled = this.isEnableClientCommand();
+        startGamePacket.ruleDatas = this.getGameRules();
         startGamePacket.levelId = "";
         startGamePacket.worldName = this.getServer().getNetwork().getName();
         startGamePacket.generator = 1; //0 old, 1 infinite, 2 flat
@@ -1955,6 +1956,46 @@ public class Player extends EntityHuman implements CommandSender, InventoryHolde
 
         this.server.addOnlinePlayer(this);
         this.server.onPlayerCompleteLoginSequence(this);
+    }
+    
+    protected List<RuleData> additionalRules = new ArrayList<>();
+    public RuleData[] getGameRules() {
+        List<RuleData> rules = new ArrayList<>(); 
+        rules.add(new RuleData<>("dodaylightcycle", !this.level.stopTime, RuleData.BOOLEAN_TYPE));
+        rules.addAll(additionalRules);
+ 
+        return rules.toArray(new RuleData[rules.size()]);
+    }
+    
+    public void addAdditionalRule(RuleData data){
+        addAdditionalRule(data, true);
+    }
+    public void addAdditionalRule(RuleData data, boolean send){
+        if (data.name.equals("dodaylightcycle")) return;
+        if (!this.additionalRules.contains(data)) this.additionalRules.add(data);   
+        if (send) sendGameRules();
+    }
+    
+    public void updateAdditionalRule(RuleData data){
+        updateAdditionalRule(data, true);
+    }
+    public void updateAdditionalRule(RuleData data, boolean send){
+        removeAdditionalRule(data, false);
+        addAdditionalRule(data, send);
+    }
+    
+    public void removeAdditionalRule(RuleData data){
+        removeAdditionalRule(data, true);
+    }
+    public void removeAdditionalRule(RuleData data, boolean send){
+        if (this.additionalRules.contains(data)) this.additionalRules.remove(data);
+        if (send) sendGameRules();
+    }
+ 
+    public void sendGameRules() {
+        GameRulesChangedPacket pk = new GameRulesChangedPacket();
+        pk.ruleDatas = this.getGameRules();
+        this.dataPacket(pk);
     }
 
     public void handleDataPacket(DataPacket packet) {
