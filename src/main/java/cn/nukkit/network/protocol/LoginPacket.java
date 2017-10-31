@@ -38,6 +38,8 @@ public class LoginPacket extends DataPacket {
     @Override
     public void decode() {
         this.protocol = this.getInt();
+        //TODO: Remove it in future! Compatible with 1.1.x, then we can do something like kicking...
+        if (this.protocol <= 113) this.getByte();
         this.setBuffer(this.getByteArray(), 0);
         decodeChainData();
         decodeSkinData();

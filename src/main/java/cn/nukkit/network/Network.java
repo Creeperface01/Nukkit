@@ -150,9 +150,15 @@ public class Network {
 
                 if ((pk = this.getPacket(buf[0])) != null) {
                     pk.setBuffer(buf, 3); //skip 2 more bytes
-
-                    pk.decode();
-
+                    try {
+                        pk.decode();
+                    } catch (Exception e) {
+                        //TODO: Remove it in future! Compatible with 1.1.x, then we can do something like kicking...
+                        if (pk.pid() == ProtocolInfo.LOGIN_PACKET) {
+                            pk.setBuffer(buf, 1);
+                            pk.decode();
+                        } else throw e;
+                    }
                     packets.add(pk);
                 }
             }
