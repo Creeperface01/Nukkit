@@ -548,9 +548,7 @@ public class Server {
         packet.encode();
         packet.isEncoded = true;
 
-        for (Player player : players) {
-            player.dataPacket(packet);
-        }
+        getInstance().batchPackets(players, new DataPacket[]{packet}, true);
 
         if (packet.encapsulatedPacket != null) {
             packet.encapsulatedPacket = null;
