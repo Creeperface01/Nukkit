@@ -4,7 +4,9 @@ import cn.nukkit.Player;
 import cn.nukkit.block.Block;
 import cn.nukkit.event.block.SignChangeEvent;
 import cn.nukkit.level.format.FullChunk;
+import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.network.protocol.BlockEntityDataPacket;
 import cn.nukkit.utils.TextFormat;
 
 import java.io.IOException;	
