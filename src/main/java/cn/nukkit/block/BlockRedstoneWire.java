@@ -128,6 +128,8 @@ public class BlockRedstoneWire extends BlockFlowable {
 
         if (power > maxStrength - 1) {
             maxStrength = power;
+        } else if (power < maxStrength && strength <= maxStrength) {
+            maxStrength = Math.max(power, strength - 1);
         }
 
         if (meta != maxStrength) {
