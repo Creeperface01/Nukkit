@@ -113,18 +113,30 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
 
         if (super.attack(source)) {
             if (source instanceof EntityDamageByEntityEvent) {
-                Entity e = ((EntityDamageByEntityEvent) source).getDamager();
+                Entity damager = ((EntityDamageByEntityEvent) source).getDamager();
                 if (source instanceof EntityDamageByChildEntityEvent) {
-                    e = ((EntityDamageByChildEntityEvent) source).getChild();
+                    damager = ((EntityDamageByChildEntityEvent) source).getChild();
                 }
 
-                if (e.isOnFire() && !(e instanceof Player)) {
+                //Critical hit
+                if (damager instanceof Player && !damager.onGround) {
+                    AnimatePacket animate = new AnimatePacket();
+                    animate.action = AnimatePacket.Action.CRITICAL_HIT;
+                    animate.eid = getId();
+
+                    this.getLevel().addChunkPacket(damager.chunk.getX(), damager.chunk.getZ(), animate);
+//                    this.getLevel().addLevelSoundEvent(this, LevelSoundEventPacket.SOUND_ATTACK_STRONG);
+
+                    source.setDamage(source.getDamage() * 1.5f);
+                }
+
+                if (damager.isOnFire() && !(damager instanceof Player)) {
                     this.setOnFire(2 * this.server.getDifficulty());
                 }
 
-                double deltaX = this.x - e.x;
-                double deltaZ = this.z - e.z;
-                this.knockBack(e, source.getDamage(), deltaX, deltaZ, ((EntityDamageByEntityEvent) source).getKnockBack());
+                double deltaX = this.x - damager.x;
+                double deltaZ = this.z - damager.z;
+                this.knockBack(damager, source.getDamage(), deltaX, deltaZ, ((EntityDamageByEntityEvent) source).getKnockBack());
             }
 
             EntityEventPacket pk = new EntityEventPacket();
@@ -237,8 +249,9 @@ public abstract class EntityLiving extends Entity implements EntityDamageable {
         if (this.attackTime > 0) {
             this.attackTime -= tickDiff;
         }
+
         if (this.riding == null) {
-            for (Entity entity : level.getNearbyEntities(this.boundingBox.grow(0.20000000298023224D, 0.0D, 0.20000000298023224D), this)) {
+            for (Entity entity : level.getNearbyEntities(this.boundingBox.grow(0.20000000298023224, 0.0D, 0.20000000298023224), this)) {
                 if (entity instanceof EntityRideable) {
                     this.collidingWith(entity);
                 }

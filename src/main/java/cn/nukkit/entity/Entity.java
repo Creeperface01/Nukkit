@@ -34,10 +34,14 @@ import cn.nukkit.utils.MainLogger;
 import co.aikar.timings.Timing;
 import co.aikar.timings.Timings;
 import co.aikar.timings.TimingsHistory;
+import com.google.common.collect.Iterables;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static cn.nukkit.network.protocol.SetEntityLinkPacket.TYPE_REMOVE;
+import static cn.nukkit.network.protocol.SetEntityLinkPacket.TYPE_RIDE;
 
 /**
  * @author MagicDroidX
@@ -202,7 +206,7 @@ public abstract class Entity extends Location implements Metadatable {
             .putLong(DATA_LEAD_HOLDER_EID, -1)
             .putFloat(DATA_SCALE, 1f);
 
-    public Entity linkedEntity = null;
+    public final List<Entity> passengers = new ArrayList<>();
 
     public Entity riding = null;
 
@@ -231,8 +235,8 @@ public abstract class Entity extends Location implements Metadatable {
     public double lastYaw;
     public double lastPitch;
 
-    public double PitchDelta;
-    public double YawDelta;
+    public double pitchDelta;
+    public double yawDelta;
 
     public double entityCollisionReduction = 0; // Higher than 0.9 will result a fast collisions
     public AxisAlignedBB boundingBox;
@@ -348,6 +352,10 @@ public abstract class Entity extends Location implements Metadatable {
                 this.setNameTagVisible(this.namedTag.getBoolean("CustomNameVisible"));
             }
         }
+
+        this.setDataFlag(DATA_FLAGS, DATA_FLAG_HAS_COLLISION, true);
+        this.dataProperties.putFloat(DATA_BOUNDING_BOX_HEIGHT, this.getHeight());
+        this.dataProperties.putFloat(DATA_BOUNDING_BOX_WIDTH, this.getWidth());
 
         this.scheduleUpdate();
     }
@@ -562,12 +570,28 @@ public abstract class Entity extends Location implements Metadatable {
         return this.scale;
     }
 
-    public Entity getLinkedEntity() {
-        return linkedEntity;
+    public List<Entity> getPassengers() {
+        return passengers;
     }
 
-    public void setLinkedEntity(Entity entity) {
-        linkedEntity = entity;
+    public Entity getPassenger() {
+        return Iterables.getFirst(this.passengers, null);
+    }
+
+    public boolean isPassenger(Entity entity) {
+        return this.passengers.contains(entity);
+    }
+
+    public boolean isControlling(Entity entity) {
+        return this.passengers.indexOf(entity) == 0;
+    }
+
+    public boolean hasControllingPassenger() {
+        return !this.passengers.isEmpty() && isControlling(this.passengers.get(0));
+    }
+
+    public Entity getRiding() {
+        return riding;
     }
 
     public Map<Integer, Effect> getEffects() {
@@ -798,13 +822,7 @@ public abstract class Entity extends Location implements Metadatable {
         }
 
         if (this.riding != null) {
-            SetEntityLinkPacket pkk = new SetEntityLinkPacket();
-            pkk.rider = this.riding.getId();
-            pkk.riding = this.getId();
-            pkk.type = 1;
-            pkk.unknownByte = 1;
-
-            player.dataPacket(pkk);
+            this.riding.spawnTo(player);
         }
     }
 
@@ -1093,6 +1111,8 @@ public abstract class Entity extends Location implements Metadatable {
             ((EntityRideable) riding).mountEntity(this);
         }
 
+        updatePassengers();
+
         if (!this.effects.isEmpty()) {
             for (Effect effect : this.effects.values()) {
                 if (effect.canTick()) {
@@ -1270,47 +1290,105 @@ public abstract class Entity extends Location implements Metadatable {
         return hasUpdate;
     }
 
-    protected boolean updateRidden() {
-        if (this.linkedEntity != null) {
-            if (!linkedEntity.isAlive()) {
-                return false;
-            }
-            this.motionX = 0.0D;
-            this.motionY = 0.0D;
-            this.motionZ = 0.0D;
-            onUpdate(lastUpdate);
-            if (this.linkedEntity != null) {
-                this.YawDelta += this.linkedEntity.yaw - this.linkedEntity.lastYaw;
-                for (this.PitchDelta += this.linkedEntity.pitch - this.linkedEntity.lastPitch; this.YawDelta >= 180.0D; this.YawDelta -= 360.0D) {
-                }
-                while (this.YawDelta < -180.0D) {
-                    this.YawDelta += 360.0D;
-                }
-                while (this.PitchDelta >= 180.0D) {
-                    this.PitchDelta -= 360.0D;
-                }
-                while (this.PitchDelta < -180.0D) {
-                    this.PitchDelta += 360.0D;
-                }
-                double var1 = this.YawDelta * 0.5D;
-                double var3 = this.PitchDelta * 0.5D;
-                float var5 = 10.0F;
-                var1 = NukkitMath.clamp(var1, -var5, var5);
-                var3 = NukkitMath.clamp(var3, -var5, var5);
-                this.YawDelta -= var1;
-                this.PitchDelta -= var3;
-            }
-            return true;
-        }
-        return false;
+    public boolean mountEntity(Entity entity) {
+        return mountEntity(entity, TYPE_RIDE);
     }
 
-    protected void updateRiderPosition(Vector3f offset) {
-        // Messy unknown variables
-        if (updateRidden()) {
-            linkedEntity.setDataProperty(new Vector3fEntityData(DATA_RIDER_SEAT_POSITION,
-                    offset));
+    /**
+     * Mount or Dismounts an Entity from a/into vehicle
+     *
+     * @param entity The target Entity
+     * @return {@code true} if the mounting successful
+     */
+    public boolean mountEntity(Entity entity, byte mode) {
+        Objects.requireNonNull(entity, "The target of the mounting entity can't be null");
+
+        if (entity.riding != null) {
+            dismountEntity(entity);
+        } else {
+            if (isPassenger(entity)) {
+                return false;
+            }
+
+            // Entity entering a vehicle
+            EntityVehicleEnterEvent ev = new EntityVehicleEnterEvent(entity, this);
+            server.getPluginManager().callEvent(ev);
+            if (ev.isCancelled()) {
+                return false;
+            }
+
+            broadcastLinkPacket(entity, mode);
+
+            // Add variables to entity
+            entity.riding = this;
+            entity.setDataFlag(DATA_FLAGS, DATA_FLAG_RIDING, true);
+            passengers.add(entity);
+
+            entity.setSeatPosition(getMountedOffset(entity));
+            updatePassengerPosition(entity);
         }
+        return true;
+    }
+
+    public boolean dismountEntity(Entity entity) {
+        // Run the events
+        EntityVehicleExitEvent ev = new EntityVehicleExitEvent(entity, this);
+        server.getPluginManager().callEvent(ev);
+        if (ev.isCancelled()) {
+            return false;
+        }
+
+        broadcastLinkPacket(entity, TYPE_REMOVE);
+
+        // Refurbish the entity
+        entity.riding = null;
+        entity.setDataFlag(DATA_FLAGS, DATA_FLAG_RIDING, false);
+        passengers.remove(entity);
+
+        entity.setSeatPosition(new Vector3f());
+        updatePassengerPosition(entity);
+
+        return true;
+    }
+
+    protected void broadcastLinkPacket(Entity rider, byte type) {
+        SetEntityLinkPacket pk = new SetEntityLinkPacket();
+        pk.rider = getId();         // To the?
+        pk.riding = rider.getId(); // From who?
+        pk.type = type;
+
+        Server.broadcastPacket(this.hasSpawned.values(), pk);
+    }
+
+    public void updatePassengers() {
+        if (this.passengers.isEmpty()) {
+            return;
+        }
+
+        for (Entity passenger : new ArrayList<>(this.passengers)) {
+            if (!passenger.isAlive()) {
+                dismountEntity(passenger);
+                continue;
+            }
+
+            updatePassengerPosition(passenger);
+        }
+    }
+
+    protected void updatePassengerPosition(Entity passenger) {
+        passenger.setPosition(this.add(passenger.getSeatPosition().asVector3()));
+    }
+
+    public void setSeatPosition(Vector3f pos) {
+        this.setDataProperty(new Vector3fEntityData(DATA_RIDER_SEAT_POSITION, pos));
+    }
+
+    public Vector3f getSeatPosition() {
+        return this.getDataPropertyVector3f(DATA_RIDER_SEAT_POSITION);
+    }
+
+    public Vector3f getMountedOffset(Entity entity) {
+        return new Vector3f(0, getHeight() * 0.75f);
     }
 
     public final void scheduleUpdate() {
@@ -1339,7 +1417,8 @@ public abstract class Entity extends Location implements Metadatable {
     public void setAbsorption(float absorption) {
         if (absorption != this.absorption) {
             this.absorption = absorption;
-            if (this instanceof Player) ((Player) this).setAttribute(Attribute.getAttribute(Attribute.ABSORPTION).setValue(absorption));
+            if (this instanceof Player)
+                ((Player) this).setAttribute(Attribute.getAttribute(Attribute.ABSORPTION).setValue(absorption));
         }
     }
 
@@ -1445,7 +1524,7 @@ public abstract class Entity extends Location implements Metadatable {
     }
 
     public void applyEntityCollision(Entity entity) {
-        if (entity.riding != this && entity.linkedEntity != this) {
+        if (entity.riding != this && !entity.passengers.contains(this)) {
             double dx = entity.x - this.x;
             double dy = entity.z - this.z;
             double dz = NukkitMath.getDirection(dx, dy);
@@ -1462,10 +1541,10 @@ public abstract class Entity extends Location implements Metadatable {
 
                 dx *= d3;
                 dy *= d3;
-                dx *= 0.05000000074505806D;
-                dy *= 0.05000000074505806D;
-                dx *= 1.0F + entityCollisionReduction;
-                dz *= 1.0F + entityCollisionReduction;
+                dx *= 0.05000000074505806;
+                dy *= 0.05000000074505806;
+                dx *= 1F + entityCollisionReduction;
+
                 if (this.riding == null) {
                     motionX -= dx;
                     motionZ -= dy;
@@ -2040,6 +2119,10 @@ public abstract class Entity extends Location implements Metadatable {
 
     public Vector3 getDataPropertyPos(int id) {
         return this.getDataProperties().getPosition(id);
+    }
+
+    public Vector3f getDataPropertyVector3f(int id) {
+        return this.getDataProperties().getFloatPosition(id);
     }
 
     public int getDataPropertyType(int id) {

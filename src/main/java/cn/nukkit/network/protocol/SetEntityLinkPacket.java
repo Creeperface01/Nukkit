@@ -14,7 +14,7 @@ public class SetEntityLinkPacket extends DataPacket {
     public long rider;
     public long riding;
     public byte type;
-    public byte unknownByte;
+    public byte immediate;
 
     @Override
     public void decode() {
@@ -27,7 +27,7 @@ public class SetEntityLinkPacket extends DataPacket {
         this.putEntityUniqueId(this.rider);
         this.putEntityUniqueId(this.riding);
         this.putByte(this.type);
-        this.putByte(this.unknownByte);
+        this.putByte(this.immediate);
     }
 
     @Override

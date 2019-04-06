@@ -16,6 +16,8 @@ public interface EntityRideable {
      */
     boolean mountEntity(Entity entity);
 
+    boolean dismountEntity(Entity entity);
+
     default void onPlayerInput(Player player, double x, double y) {
 
     }

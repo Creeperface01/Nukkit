@@ -50,16 +50,11 @@ public class NukkitMath {
         return check > max ? max : (check < min ? min : check);
     }
 
-    public static double getDirection(double d0, double d1) {
-        if (d0 < 0.0D) {
-            d0 = -d0;
-        }
+    public static double getDirection(double diffX, double diffZ) {
+        diffX = Math.abs(diffX);
+        diffZ = Math.abs(diffZ);
 
-        if (d1 < 0.0D) {
-            d1 = -d1;
-        }
-
-        return d0 > d1 ? d0 : d1;
+        return diffX > diffZ ? diffX : diffZ;
     }
 
     public static int max(int... ints) {
