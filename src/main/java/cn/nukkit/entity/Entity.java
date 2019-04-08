@@ -179,6 +179,7 @@ public abstract class Entity extends Location implements Metadatable {
     public static final int DATA_FLAG_CAN_POWER_JUMP = 44;
     public static final int DATA_FLAG_LINGER = 45;
     public static final int DATA_FLAG_GRAVITY = 46;
+    public static final int DATA_FLAG_HAS_COLLISION = 47;
 
     public static final int DATA_FLAG_SWIMMING = 55;
 
@@ -1174,13 +1175,6 @@ public abstract class Entity extends Location implements Metadatable {
             this.lastPitch = this.pitch;
 
             this.addMovement(this.x, this.y + this.getBaseOffset(), this.z, this.yaw, this.pitch, this.yaw);
-
-            if (this.linkedEntity != null) {
-                if (linkedEntity instanceof Player) {
-                    ((Player) linkedEntity).newPosition = this.add(getMountedOffset().asVector3());
-                    ((Player) linkedEntity).processMovement(1);
-                }
-            }
         }
 
         if (diffMotion > 0.0025 || (diffMotion > 0.0001 && this.getMotion().lengthSquared() <= 0.0001)) { //0.05 ** 2

@@ -303,24 +303,6 @@ public class AxisAlignedBB implements Cloneable {
         return MovingObjectPosition.fromBlock(0, 0, 0, face, vector);
     }
 
-    public void forEach(BBConsumer action) {
-        int minX = NukkitMath.floorDouble(this.minX);
-        int minY = NukkitMath.floorDouble(this.minY);
-        int minZ = NukkitMath.floorDouble(this.minZ);
-
-        int maxX = NukkitMath.floorDouble(this.maxX);
-        int maxY = NukkitMath.floorDouble(this.maxY);
-        int maxZ = NukkitMath.floorDouble(this.maxZ);
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    action.accept(x, y, z);
-                }
-            }
-        }
-    }
-
     public double distance(Vector3 p) {
         return Math.sqrt(distanceSquared(p));
     }
@@ -346,11 +328,6 @@ public class AxisAlignedBB implements Cloneable {
             Server.getInstance().getLogger().logException(e);
         }
         return null;
-    }
-
-    public interface BBConsumer {
-
-        void accept(int x, int y, int z);
     }
 
     public double getMinX() {
