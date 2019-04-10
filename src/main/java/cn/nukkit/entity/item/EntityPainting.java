@@ -9,6 +9,7 @@ import cn.nukkit.item.ItemPainting;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.network.protocol.AddPaintingPacket;
+import cn.nukkit.network.protocol.DataPacket;
 
 /**
  * author: MagicDroidX
@@ -74,7 +75,7 @@ public class EntityPainting extends EntityHanging {
     }
 
     @Override
-    public void spawnTo(Player player) {
+    protected DataPacket createAddEntityPacket() {
         AddPaintingPacket pk = new AddPaintingPacket();
         pk.entityUniqueId = this.getId();
         pk.entityRuntimeId = this.getId();
@@ -84,9 +85,7 @@ public class EntityPainting extends EntityHanging {
         pk.direction = this.getDirection().getHorizontalIndex();
         pk.title = this.namedTag.getString("Motive");
 
-        player.dataPacket(pk);
-
-        super.spawnTo(player);
+        return pk;
     }
 
     @Override

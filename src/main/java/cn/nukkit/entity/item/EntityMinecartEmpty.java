@@ -36,4 +36,9 @@ public class EntityMinecartEmpty extends EntityMinecartAbstract {
             // removed rolling feature from here because of MCPE logic?
         }
     }
+
+    @Override
+    public boolean isRideable() {
+        return true;
+    }
 }

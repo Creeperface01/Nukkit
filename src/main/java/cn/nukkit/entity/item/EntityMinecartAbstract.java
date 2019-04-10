@@ -245,7 +245,7 @@ public abstract class EntityMinecartAbstract extends EntityVehicle {
                 } else {
                     if (level.getGameRules().getBoolean("doEntityDrops")) {
                         dropItem();
-                    }
+//                    }
                     close();
                 }
             }

@@ -65,6 +65,10 @@ public abstract class BlockLiquid extends BlockTransparent {
         return new AxisAlignedBB(this.x, this.y, this.z, this.x + 1, this.y + 1 - getFluidHeightPercent(), this.z + 1);
     }
 
+    public double getMaxY() {
+        return this.y + 1 - getFluidHeightPercent();
+    }
+
     public float getFluidHeightPercent() {
         float d = (float) this.meta;
         if (d >= 8) {

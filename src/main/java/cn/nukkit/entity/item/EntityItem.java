@@ -11,6 +11,7 @@ import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.NBTIO;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.network.protocol.AddItemEntityPacket;
+import cn.nukkit.network.protocol.DataPacket;
 
 /**
  * @author MagicDroidX
@@ -249,7 +250,7 @@ public class EntityItem extends Entity {
     }
 
     @Override
-    public void spawnTo(Player player) {
+    protected DataPacket createAddEntityPacket() {
         AddItemEntityPacket pk = new AddItemEntityPacket();
         pk.entityUniqueId = this.getId();
         pk.entityRuntimeId = this.getId();
@@ -261,9 +262,8 @@ public class EntityItem extends Entity {
         pk.speedZ = (float) this.motionZ;
         pk.metadata = this.dataProperties;
         pk.item = this.getItem();
-        player.dataPacket(pk);
 
-        super.spawnTo(player);
+        return pk;
     }
 
     @Override

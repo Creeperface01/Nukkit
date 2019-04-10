@@ -1,6 +1,5 @@
 package cn.nukkit.entity.item;
 
-import cn.nukkit.Player;
 import cn.nukkit.block.Block;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.data.IntEntityData;
@@ -12,7 +11,6 @@ import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.sound.AnvilFallSound;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
-import cn.nukkit.network.protocol.AddEntityPacket;
 
 /**
  * @author MagicDroidX
@@ -174,25 +172,6 @@ public class EntityFallingBlock extends Entity {
     public void saveNBT() {
         namedTag.putInt("TileID", blockId);
         namedTag.putByte("Data", damage);
-    }
-
-    @Override
-    public void spawnTo(Player player) {
-        AddEntityPacket packet = new AddEntityPacket();
-        packet.type = EntityFallingBlock.NETWORK_ID;
-        packet.entityUniqueId = this.getId();
-        packet.entityRuntimeId = getId();
-        packet.x = (float) x;
-        packet.y = (float) y;
-        packet.z = (float) z;
-        packet.speedX = (float) motionX;
-        packet.speedY = (float) motionY;
-        packet.speedZ = (float) motionZ;
-        packet.yaw = (float) yaw;
-        packet.pitch = (float) pitch;
-        packet.metadata = dataProperties;
-        player.dataPacket(packet);
-        super.spawnTo(player);
     }
 
 }
