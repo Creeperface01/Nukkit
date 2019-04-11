@@ -182,8 +182,8 @@ public abstract class Entity extends Location implements Metadatable {
     public static final int DATA_FLAG_WASD_CONTROLLED = 43;
     public static final int DATA_FLAG_CAN_POWER_JUMP = 44;
     public static final int DATA_FLAG_LINGER = 45;
-    public static final int DATA_FLAG_GRAVITY = 46;
-    public static final int DATA_FLAG_HAS_COLLISION = 47;
+    public static final int DATA_FLAG_HAS_COLLISION = 46;
+    public static final int DATA_FLAG_GRAVITY = 47;
 
     public static final int DATA_FLAG_SWIMMING = 55;
 
